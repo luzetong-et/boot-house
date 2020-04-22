@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>添加</title>
+    <link th:href="@{/bootstrap/css/bootstrap.min.css}" rel="stylesheet">
+</head>
+<body>
+<form id="addForm" th:action="@{/house/add}" method="post"
+      enctype="multipart/form-data"
+      class="form-horizontal" role="form">
+    <!-- 1.省：下拉列表框 -->
+    <div class="form-group">
+        <label for="province" class="col-sm-2 control-label">所在省</label>
+        <div class="col-sm-5 input-group">
+            <select id="province" name="province" class="form-control" >
+                <option value="">--请选择--</option>
+            </select>
+        </div>
+    </div>
+    <!-- 2.市：下拉列表框 -->
+    <div class="form-group">
+        <label for="city" class="col-sm-2 control-label">所在市</label>
+        <div class="col-sm-5 input-group">
+            <select id="city" name="city" class="form-control" >
+                <option value="">--请选择--</option>
+            </select>
+        </div>
+    </div>
+    <!-- 3.区：下拉列表框 -->
+    <div class="form-group">
+        <label for="area" class="col-sm-2 control-label">所在区</label>
+        <div class="col-sm-5 input-group">
+            <select id="area" name="area" class="form-control" >
+                <option value="">--请选择--</option>
+            </select>
+        </div>
+    </div>
+    <!-- 4.租赁方式：下拉列表框 -->
+    <div class="form-group">
+        <label for="rent_mode" class="col-sm-2 control-label">租赁方式</label>
+        <div class="col-sm-5 input-group">
+            <select id="rent_mode" name="rentMode" class="form-control" >
+                <option value="">--请选择--</option>
+            </select>
+        </div>
+    </div>
+    <!-- 5.租金：普通文本框 -->
+    <div class="form-group">
+        <label for="rental" class="col-sm-2 control-label">租金</label>
+        <div class="col-sm-5 input-group">
+            <input type="text" name="rental" id="rental" class="form-control">
+        </div>
+    </div>
+    <!-- 6.户型：下拉列表框 -->
+    <div class="form-group">
+        <label for="house_type" class="col-sm-2 control-label">户型</label>
+        <div class="col-sm-5 input-group">
+            <select id="house_type" name="houseType" class="form-control" >
+                <option value="">--请选择--</option>
+            </select>
+        </div>
+    </div>
+    <!-- 7.朝向：下拉列表框 -->
+    <div class="form-group">
+        <label for="orient" class="col-sm-2 control-label">朝向</label>
+        <div class="col-sm-5 input-group">
+            <select id="orient" name="orient" class="form-control" >
+                <option value="">--请选择--</option>
+            </select>
+        </div>
+    </div>
+    <!-- 8.租金：普通文本框 -->
+    <div class="form-group">
+        <label for="address" class="col-sm-2 control-label">地址</label>
+        <div class="col-sm-5 input-group">
+            <input type="text" name="address" id="address" class="form-control">
+        </div>
+    </div>
+    <!-- 9.图片 -->
+    <div class="form-group">
+        <label for="file" class="col-sm-2 control-label">房屋图片</label>
+        <div class="col-sm-5 input-group">
+            <input type="file" name="file" id="file" class="form-control">
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-sm-offset-3 col-sm-10">
+            <button type="submit" class="btn btn-primary">添加</button>
+        </div>
+    </div>
+</form>
+<script th:src="@{/js/jquery/jquery.min.js}"></script>
+<script th:src="@{/bootstrap/js/bootstrap.min.js}"></script>
+<script th:src="@{/js/jquery/validate/jquery.validate.min.js}" type="text/javascript"></script>
+<script th:src="@{/js/jquery/validate/messages_zh.min.js}" type="text/javascript"></script>
+<script th:inline="javascript" type="text/javascript">
+    const path = /*[[${#request.getContextPath()}]]*/
+    const selectOption = "<option value=''>--请选择--</option>";
+    $(function(){
+        // 加载省
+        House.queryCascadeArea(0, 'province');
+
+        /*
+         * 切换省的时候，查询市列表
+         */
+        $('#province').change(function() {
+            // 切换省的时候，清空市和区
+            $('#city').html(selectOption);
+            $('#area').html(selectOption);
+
+            // 如果点击的不是请选择，则执行查询
+            if(this.value) {
+                House.queryCascadeArea(this.value, 'city');
+            }
+        });
+
+        /*
+         * 切换市的时候，查询区列表
+         */
+        $('#city').change(function() {
+            // 切换市的时候，清空区
+            $('#area').html(selectOption);
+            // 如果点击的不是请选择，则执行查询
+            if(this.value) {
+                House.queryCascadeArea(this.value, 'area');
+            }
+        });
+
+        // 查询租赁方式、户型、朝向
+        House.queryDict('rent_mode');
+        House.queryDict('house_type');
+        House.queryDict('orient');
+        // 校验
+        House.validateFrom();
+
+    });
+
+    let House = {
+        /*
+         * 1.省市区级联查询
+         * 根据parentId查询省市区，省的parentId是0；
+         * 查询完省市区列表之后，需要操作Dom，给省市区下拉列表框赋值
+         * 地区查询接口已存在
+         */
+        queryCascadeArea: function(parentId, domId) {
+            $.ajax({
+                url: path + '/area/' + parentId,
+                type: 'GET',
+                data: '',
+                dataType: 'JSON',
+                success: function(res) {
+                    // 结果就是一个数组
+                    let option = "<option value=''>--请选择--</option>";
+                    for (let area of res) {
+                        option += "<option value='" + area.id + "'>"
+                            + area.areaName
+                            + "</option>";
+                    }
+                    // 给domId赋值
+                    $('#' + domId).html(option);
+                }
+            });
+        },
+
+        /*
+         * 查询租赁方式、户型、朝向
+         * /dict/{groupId} - rent_mode、house_type、orient
+         * groupId：查询的某一组字典项
+         * domId：要操作的dom，也就是具体的下拉列表框
+         * 其中这里的groupId和domId使用的是同一个
+         */
+        queryDict: function(groupId) {
+            $.ajax({
+                url: path + '/dict/' + groupId,
+                type: 'GET',
+                data: '',
+                dataType: 'JSON',
+                success: function(res) {
+                    let option = "<option value=''>--请选择--</option>";
+                    for(let dict of res) {
+                        option += "<option value='" + dict.value + "'>"
+                            + dict.name
+                            + "</option>";
+                    }
+                    $('#' + groupId).html(option);
+                }
+            });
+        },
+        validateFrom: function() {
+            $('#addForm').validate({
+
+                // 修改错误信息标签(默认是label)。使用LayUI时需要修改为div
+                errorElement: 'div',
+
+                // 修改验证信息显示位置；error:表示那个label标签（已经修改成了div标签）; element:input输入框
+                errorPlacement: function(error, element) {
+                    error.addClass('input-group-addon');
+                    // 将校验信息的div标签追加到input、select的父标签，也就是跟input、select同级
+                    error.appendTo(element.parent())
+                },
+                // 校验成功后
+                success: function(div) {
+                    div.addClass('success input-group-addon').text('OK');
+                },
+
+
+                // 校验规则字段: rules
+                rules: {
+                    // 这里的属性要和表单项name属性值一致
+                    province: 'required',
+                    city: 'required',
+                    area: 'required',
+                    rental: {
+                        required: true,
+                        positiveInteger: true,
+                        max: 500000,
+                    }
+                },
+                // 检验消息: messages
+                messages: {
+                    province: '省必填',
+                    city: '市必填',
+                    area: '区必填',
+                    rental: {
+                        required: '租金必填',
+                        positiveInteger: '必须大于0',
+                        max: '不能大于50万',
+                    }
+                }
+            });
+            $.validator.addMethod('positiveInteger', function(value, element) {
+                let reg = /^\+?[1-9]\d*$/;
+                return this.optional(element) || (reg.test(value));
+            }, '必须是大于0的正整数');
+        }
+    }
+
+</script>
+</body>
+</html>
