@@ -3,6 +3,14 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.etoak.mapper.AreaMapper">
+   <cache/>
+    <sql id="baseSql">
+       id,
+        pid,
+        name,
+        sort
+    </sql>
+
     <select id="queryByPid" parameterType="int" resultType="Area">
         select id,
         pid,
@@ -11,5 +19,13 @@
         from t_boot_area1910
         where pid = #{pid}
         order by sort
+    </select>
+
+
+    <select id="queryById" parameterType="int" resultType="Area">
+           SELECT
+           <include refid="baseSql"/>
+        from t_boot_area1910
+        where id=#{id}
     </select>
 </mapper>

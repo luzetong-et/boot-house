@@ -65,9 +65,9 @@
     </div>
     <!-- 7.朝向：下拉列表框 -->
     <div class="form-group">
-        <label for="orient" class="col-sm-2 control-label">朝向</label>
+        <label for="orientation" class="col-sm-2 control-label">朝向</label>
         <div class="col-sm-5 input-group">
-            <select id="orient" name="orient" class="form-control" >
+            <select id="orientation" name="orientation" class="form-control" >
                 <option value="">--请选择--</option>
             </select>
         </div>
@@ -132,7 +132,7 @@
         // 查询租赁方式、户型、朝向
         House.queryDict('rent_mode');
         House.queryDict('house_type');
-        House.queryDict('orient');
+        House.queryDict('orientation');
         // 校验
         House.validateFrom();
 
@@ -145,18 +145,18 @@
          * 查询完省市区列表之后，需要操作Dom，给省市区下拉列表框赋值
          * 地区查询接口已存在
          */
-        queryCascadeArea: function(parentId, domId) {
+        queryCascadeArea: function(pid, domId) {
             $.ajax({
-                url: path + '/area/' + parentId,
+                url: path + '/area/queryByPid',
                 type: 'GET',
-                data: '',
+                data:'pid='+pid,
                 dataType: 'JSON',
                 success: function(res) {
                     // 结果就是一个数组
                     let option = "<option value=''>--请选择--</option>";
                     for (let area of res) {
                         option += "<option value='" + area.id + "'>"
-                            + area.areaName
+                            + area.name
                             + "</option>";
                     }
                     // 给domId赋值
@@ -217,7 +217,11 @@
                         required: true,
                         positiveInteger: true,
                         max: 500000,
-                    }
+                    },
+                    address:{
+                        required: true,
+                        maxlength: 10,
+                    },
                 },
                 // 检验消息: messages
                 messages: {
@@ -228,9 +232,14 @@
                         required: '租金必填',
                         positiveInteger: '必须大于0',
                         max: '不能大于50万',
-                    }
+                    },
+                    address:{
+                      required: '必填项',
+                        maxlength: '10个字符以内'
+                    },
                 }
             });
+            /*自定义校验规则*/
             $.validator.addMethod('positiveInteger', function(value, element) {
                 let reg = /^\+?[1-9]\d*$/;
                 return this.optional(element) || (reg.test(value));

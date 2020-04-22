@@ -23,3 +23,9 @@ pagehelper:
 logging:
   level:
     com.etoak.mapper: DEBUG
+
+upload:
+ dir: d:/upload/
+ savePathPrefix: /pics/
+ mapping: /pics/**
+
